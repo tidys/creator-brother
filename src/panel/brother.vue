@@ -1,6 +1,11 @@
 <template>
   <div class="brother" @click="onClick">
-    {{ url }}
+    <div style="color: white;width: 25px;">
+      {{ index + 1 }}
+    </div>
+    <div style="margin-left: 8px">
+      {{ url }}
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -11,6 +16,10 @@ export default defineComponent({
     url: {
       type: String,
       default: "",
+    },
+    index: {
+      type: Number,
+      default: 0,
     },
   },
   setup(props, { emit }) {
@@ -28,8 +37,11 @@ export default defineComponent({
 .brother {
   width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   cursor: pointer;
+  margin-left: 3px;
+  margin-top: 1px;
+  margin-bottom: 1px;
   &:hover {
     background-color: #5e5e5e;
   }

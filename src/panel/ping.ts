@@ -1,9 +1,12 @@
+import { join } from "path";
+
 export class Ping {
   private test(ip: string, port: number = 7456): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         const xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
+        let timer = null; // 因为最后触发onError导致
+        xhr.onreadystatechange = () => {
           if (xhr.readyState === 1) {
             // open 方法已经被调用
           }
@@ -16,13 +19,24 @@ export class Ping {
               }
             } else {
               // 0 出错或者失败
-              resolve(false);
+              timer = setTimeout(() => {
+                resolve(false);
+              }, this.checkTime);
             }
           }
         };
+
+        xhr.onerror = function (event: ProgressEvent) {
+          //   console.log(event);
+          clearTimeout(timer);
+          timer = null;
+          resolve(true);
+        };
         const url = this.linkUrl(ip, port);
-        xhr.open("GET", url);
-        xhr.timeout = 100;
+        const full = `http://${ip}:${port}/settings.js`;
+        // console.log(full);
+        xhr.open("GET", full);
+        xhr.timeout = this.timeout;
         xhr.send();
       } catch {
         // console.log(`${ip} failed to connect`);
@@ -30,6 +44,8 @@ export class Ping {
       }
     });
   }
+  public timeout: number = 100;
+  public checkTime: number = 10;
   private testTimeout(ip: string, port: number) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -40,12 +56,15 @@ export class Ping {
   private linkUrl(ip: string, port: number) {
     return `http://${ip}:${port}`;
   }
-  async searchAll(options: { process: (url: string) => void; find: (url: string) => void }): Promise<string[]> {
+  async searchAll(options: { process?: (url: string) => void; find?: (url: string) => void }): Promise<string[]> {
     const ret: string[] = [];
-    const ports: number[] = [7456, 7457];
+    const ports: number[] = [
+      7456,
+      // 7457
+    ];
     for (let index = 0; index < ports.length; index++) {
       const port = ports[index];
-      for (let i = 0; i < 255; i++) {
+      for (let i = 1; i < 255; i++) {
         const ip = `192.168.1.${i}`;
         const url = this.linkUrl(ip, port);
         options.process && options.process(url);
@@ -59,8 +78,7 @@ export class Ping {
     }
     return ret;
   }
-  async searchTarget(port: number = 7456): Promise<string> {
-    const ip = "192.168.1.134";
+  async searchTarget(ip: string = "192.168.1.134", port: number = 7456): Promise<string> {
     const url = this.linkUrl(ip, port);
     const b = await this.test(ip, port);
     if (b) {

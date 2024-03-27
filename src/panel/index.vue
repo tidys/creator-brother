@@ -1,12 +1,16 @@
 <template>
   <div class="panel">
+    <div v-if="false">
+      <CCButton @click="onTestMe">me</CCButton>
+      <CCButton @click="onTestOthers">others</CCButton>
+    </div>
     <CCButton @click="onClickBtn" :enable="searchEnabled">{{ searchText }}</CCButton>
     <div class="container ccui-scrollbar">
       <div class="brothers">
-        <Brother v-for="(item, index) in brothers" :key="index" :url="item"> </Brother>
+        <Brother v-for="(item, index) in brothers" :key="index" :index="index" :url="item"> </Brother>
       </div>
     </div>
-    <iframe src="http://192.168.1.134:7456" @load="onLoad" @error="onError"></iframe>
+    <iframe v-if="false" src="http://192.168.1.134:7456" @load="onLoad" @error="onError"></iframe>
   </div>
 </template>
 <script lang="ts">
@@ -32,25 +36,32 @@ export default defineComponent({
       searchEnabled,
       brothers,
       count,
-      onLoad(a) {
+      onLoad(a: any) {
         const iframe = a.target as HTMLIFrameElement;
-        console.log("onLoad");
+        console.log(iframe.outerHTML);
       },
-      onError(a) {
+      onError(a: any) {
         console.log("onError");
       },
+      async onTestMe() {
+        const ping = new Ping();
+        const url = await ping.searchTarget("192.168.1.134");
+        console.log(url);
+      },
+      async onTestOthers() {
+        const ping = new Ping();
+        const url = await ping.searchTarget("192.168.1.182");
+        console.log(url);
+      },
       async onClickBtn() {
-
-        
-        return;
         if (!searchEnabled.value) {
           console.log(`wait ...`);
           return;
         }
-        console.log("onClickBtn");
         searchEnabled.value = false;
         brothers.value.length = 0;
         const ping = new Ping();
+        ping.timeout = 100;
         const arr = await ping.searchAll({
           process: (url: string) => {
             searchText.value = url;
