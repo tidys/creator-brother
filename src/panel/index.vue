@@ -1,8 +1,7 @@
 <template>
   <div class="panel">
-    <div v-if="false">
-      <CCButton @click="onTestMe">me</CCButton>
-      <CCButton @click="onTestOthers">others</CCButton>
+    <div class="title">
+      <CCProp name="Your IP"><CCInput :value="ip" @change="onChangeIp"></CCInput></CCProp>
     </div>
     <CCButton @click="onClickBtn" :enable="searchEnabled">{{ searchText }}</CCButton>
     <div class="container ccui-scrollbar">
@@ -14,44 +13,43 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, provide, nextTick } from "vue";
+import { defineComponent, onMounted, ref, provide, nextTick, toRaw } from "vue";
 import PluginConfig from "../../cc-plugin.config";
 import ccui from "@xuyanfeng/cc-ui";
 import Brother from "./brother.vue";
 import { Ping } from "./ping";
-const { CCInput, CCButton } = ccui.components;
+import CCP from "cc-plugin/src/ccp/entry-render";
+const { CCInput, CCButton, CCProp } = ccui.components;
 
 export default defineComponent({
   name: "index",
-  components: { CCButton, Brother },
+  components: { CCButton, Brother, CCInput, CCProp },
   setup(props, { emit }) {
-    onMounted(() => {});
+    onMounted(async () => {
+      const localIp = await CCP.Adaptation.IP.getLocalIP();
+      if (localIp) {
+        ip.value = localIp;
+      }
+    });
     const defaultSearchText = "search creator brother";
     const searchText = ref<string>(defaultSearchText);
-    const count = ref(0);
+    const ip = ref<string>("192.168.1.18");
     const searchEnabled = ref<boolean>(true);
     const brothers = ref<string[]>([]);
     return {
       searchText,
       searchEnabled,
       brothers,
-      count,
+      ip,
+      onChangeIp(v: string) {
+        ip.value = v;
+      },
       onLoad(a: any) {
         const iframe = a.target as HTMLIFrameElement;
         console.log(iframe.outerHTML);
       },
       onError(a: any) {
         console.log("onError");
-      },
-      async onTestMe() {
-        const ping = new Ping();
-        const url = await ping.searchTarget("192.168.1.134");
-        console.log(url);
-      },
-      async onTestOthers() {
-        const ping = new Ping();
-        const url = await ping.searchTarget("192.168.1.182");
-        console.log(url);
       },
       async onClickBtn() {
         if (!searchEnabled.value) {
@@ -61,6 +59,13 @@ export default defineComponent({
         searchEnabled.value = false;
         brothers.value.length = 0;
         const ping = new Ping();
+        const v = toRaw(ip.value);
+        const error = ping.checkIp(v);
+        if (error) {
+          CCP.Adaptation.Dialog.message({ message: error });
+          return;
+        }
+        ping.setBaseIp(v);
         ping.timeout = 100;
         const arr = await ping.searchAll({
           process: (url: string) => {
@@ -84,6 +89,11 @@ export default defineComponent({
   height: 100%;
   display: flex;
   flex-direction: column;
+  .title {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+  }
   .container {
     flex: 1;
     width: 100%;

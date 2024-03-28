@@ -56,16 +56,50 @@ export class Ping {
   private linkUrl(ip: string, port: number) {
     return `http://${ip}:${port}`;
   }
+  private baseIp: string;
+  public checkIp(ip: string) {
+    const arr = ip.split(".");
+    if (arr.length !== 4) {
+      return "ip格式不正确";
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const num = parseInt(arr[i]);
+      if (num < 0 || num > 255) {
+        return "ip段必须在[0-255]";
+      }
+    }
+    return "";
+  }
+  public setBaseIp(ip: string) {
+    if (4 !== ip.split(".").length) {
+      return false;
+    } else {
+      this.baseIp = ip;
+      return true;
+    }
+  }
+  private getFullIp(index: number) {
+    const arr = this.baseIp.split(".");
+    if (arr.length != 4) {
+      return "";
+    }
+    const ip = [];
+    for (let i = 0; i < 3; i++) {
+      ip.push(arr[i]);
+    }
+    ip.push(index);
+    return ip.join(".");
+  }
   async searchAll(options: { process?: (url: string) => void; find?: (url: string) => void }): Promise<string[]> {
     const ret: string[] = [];
-    const ports: number[] = [
-      7456,
-      // 7457
-    ];
+    const ports: number[] = [7456, 7457];
     for (let index = 0; index < ports.length; index++) {
       const port = ports[index];
       for (let i = 1; i < 255; i++) {
-        const ip = `192.168.1.${i}`;
+        const ip = this.getFullIp(i);
+        if (!ip) {
+          continue;
+        }
         const url = this.linkUrl(ip, port);
         options.process && options.process(url);
         // const b = await this.testTimeout(ip, port);
