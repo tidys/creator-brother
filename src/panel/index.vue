@@ -52,6 +52,12 @@ export default defineComponent({
         console.log("onError");
       },
       async onClickBtn() {
+        debugger;
+        const href = window.location.href;
+        if (href.startsWith("https://")) {
+          CCP.Adaptation.Dialog.message({ message: "暂时不支持https进行检测" });
+          return;
+        }
         if (!searchEnabled.value) {
           console.log(`wait ...`);
           return;
