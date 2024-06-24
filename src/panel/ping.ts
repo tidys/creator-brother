@@ -97,9 +97,7 @@ export class Ping {
       if (!ip) {
         continue;
       }
-      const ports: number[] = [7456, 7457];
-      for (let index = 0; index < ports.length; index++) {
-        const port = ports[index];
+      for (let port = 7456; ; port++) {
         const url = this.linkUrl(ip, port);
         options.process && options.process(url);
         // const b = await this.testTimeout(ip, port);
