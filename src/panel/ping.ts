@@ -92,14 +92,14 @@ export class Ping {
   }
   async searchAll(options: { process?: (url: string) => void; find?: (url: string) => void }): Promise<string[]> {
     const ret: string[] = [];
-    const ports: number[] = [7456, 7457];
-    for (let index = 0; index < ports.length; index++) {
-      const port = ports[index];
-      for (let i = 1; i < 255; i++) {
-        const ip = this.getFullIp(i);
-        if (!ip) {
-          continue;
-        }
+    for (let i = 1; i < 255; i++) {
+      const ip = this.getFullIp(i);
+      if (!ip) {
+        continue;
+      }
+      const ports: number[] = [7456, 7457];
+      for (let index = 0; index < ports.length; index++) {
+        const port = ports[index];
         const url = this.linkUrl(ip, port);
         options.process && options.process(url);
         // const b = await this.testTimeout(ip, port);
@@ -107,6 +107,8 @@ export class Ping {
         if (b) {
           options.find && options.find(url);
           ret.push(url);
+        } else {
+          break;
         }
       }
     }

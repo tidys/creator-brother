@@ -1,6 +1,6 @@
 <template>
   <div class="brother" @click="onClick">
-    <div style="color: white;width: 25px;">
+    <div style="color: white; width: 25px">
       {{ index + 1 }}
     </div>
     <div style="margin-left: 8px">
@@ -9,6 +9,7 @@
   </div>
 </template>
 <script lang="ts">
+import CCP from "cc-plugin/src/ccp/entry-render";
 import { defineComponent, ref } from "vue";
 export default defineComponent({
   name: "brother",
@@ -27,7 +28,11 @@ export default defineComponent({
     return {
       url1,
       onClick() {
-        window.open(props.url);
+        if (CCP.Adaptation.Env.isWeb) {
+          window.open(props.url);
+        } else if (CCP.Adaptation.Env.isPlugin) {
+          CCP.Adaptation.Shell.openUrl(props.url);
+        }
       },
     };
   },
